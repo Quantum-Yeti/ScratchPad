@@ -26,7 +26,7 @@
 ### Setup
 
 ```bash
-git clone https://github.com/your-username/scribble-notes.git
+git clone https://github.com/your-username/ScratchPad.git
 cd scribble-notes
 pip install -r requirements.txt
 python main.py
