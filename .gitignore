@@ -1,0 +1,59 @@
+# Byte-compiled / compiled files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+*.pyd
+*.dll
+
+# Virtual environment
+venv/
+.env/
+.venv/
+env/
+ENV/
+
+# PyInstaller build folders
+dist/
+build/
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# PyCharm project files
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Unit test / coverage / pytest
+.coverage
+.cache/
+.tox/
+nosetests.xml
+*.cover
+.hypothesis/
+
+# Logs
+*.log
+
+# User secrets / local config
+*.env
+.env.*
+
+# Ignore local SQLite or app storage if applicable
+*.db
+*.sqlite3
+*.bak
+
+# Ignore local output folders (if you write files)
+output/
+data/
+tmp/
+logs/
