@@ -27,7 +27,7 @@
 
 ```bash
 git clone https://github.com/your-username/ScratchPad.git
-cd scribble-notes
+cd SratchPad
 pip install -r requirements.txt
 python main.py
 
