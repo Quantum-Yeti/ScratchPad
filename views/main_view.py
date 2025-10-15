@@ -8,8 +8,9 @@ from utils.resource_path_utils import resource_path
 
 from views.dashboard import DashboardView
 from views.sidebar import Sidebar
-from models.model import NoteModel  # Adjust as needed
-from views.editor_panel import EditorPanel  # Your EditorPanel dialog
+from models.model import NoteModel
+from views.editor_panel import EditorPanel
+from utils.resource_path_utils import resource_path
 
 
 class MainView(QWidget):

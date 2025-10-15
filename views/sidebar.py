@@ -1,11 +1,11 @@
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QPushButton, QLabel, QSizePolicy, QSpacerItem
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QPushButton, QLabel, QSizePolicy, QSpacerItem, QFileDialog, QMessageBox
 from PySide6.QtCore import Signal, Qt, QSize
 from PySide6.QtGui import QPixmap, QIcon
-from PySide6.QtWidgets import QFileDialog, QMessageBox
 import subprocess
 import os
 
 from helpers.clickable_icon import ClickableIcon
+from utils.resource_path_utils import resource_path
 
 
 class Sidebar(QWidget):
@@ -17,11 +17,12 @@ class Sidebar(QWidget):
         layout.setSpacing(4)
         layout.setContentsMargins(2, 2, 2, 2)
 
+        # Mapping category names to their respective icon filenames
         icon_paths = {
-            "Contacts": "icons/contacts.png",
-            "Bookmarks": "icons/bookmarks.png",
-            "Copilot": "icons/copilot.png",
-            "Notes": "icons/notes.png"
+            "Contacts": resource_path("icons/contacts.png"),
+            "Bookmarks": resource_path("icons/bookmarks.png"),
+            "Copilot": resource_path("icons/copilot.png"),
+            "Notes": resource_path("icons/notes.png")
         }
 
         categories = ["Contacts", "Bookmarks", "Copilot", "Notes"]
@@ -33,9 +34,8 @@ class Sidebar(QWidget):
             btn.setCheckable(True)
             btn.setFixedHeight(50)
 
-            # Set icon if available
             icon_path = icon_paths.get(category)
-            if icon_path:
+            if icon_path and os.path.exists(icon_path):
                 btn.setIcon(QIcon(icon_path))
                 btn.setIconSize(QSize(24, 24))
 
@@ -43,7 +43,7 @@ class Sidebar(QWidget):
             layout.addWidget(btn)
             self.category_buttons.append(btn)
 
-        # Ensure only one category button is checked at a time
+        # Ensure only one button can be checked at a time
         for btn in self.category_buttons:
             btn.clicked.connect(self._update_category_button_states)
 
@@ -51,11 +51,11 @@ class Sidebar(QWidget):
             self.category_buttons[0].setChecked(True)
             self.category_selected.emit(self.category_buttons[0].text())
 
-        # Add a spacer to push the bottom buttons to the bottom
+        # Spacer to push bottom buttons to the bottom
         spacer = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
         layout.addItem(spacer)
 
-        # Container widget for bottom buttons + logo
+        # Bottom container for additional controls
         bottom_container = QWidget()
         bottom_layout = QVBoxLayout(bottom_container)
         bottom_layout.setSpacing(10)
@@ -65,7 +65,7 @@ class Sidebar(QWidget):
         self.dashboard_btn = QPushButton("Dashboard")
         self.dashboard_btn.setToolTip("Dashboard")
         self.dashboard_btn.setFixedHeight(40)
-        self.dashboard_btn.setIcon(QIcon("icons/dashboard.png"))
+        self.dashboard_btn.setIcon(QIcon(resource_path("icons/dashboard.png")))
         self.dashboard_btn.setIconSize(QSize(20, 20))
         bottom_layout.addWidget(self.dashboard_btn)
 
@@ -73,15 +73,16 @@ class Sidebar(QWidget):
         self.run_bat_btn = QPushButton("Run .bat file")
         self.run_bat_btn.setToolTip("Run a local .bat file")
         self.run_bat_btn.setFixedHeight(40)
-        self.run_bat_btn.setIcon(QIcon("icons/run.png"))
+        self.run_bat_btn.setIcon(QIcon(resource_path("icons/run.png")))
         self.run_bat_btn.setIconSize(QSize(20, 20))
         self.run_bat_btn.clicked.connect(self.run_bat_file)
         bottom_layout.addWidget(self.run_bat_btn)
 
-        # Developer logo (replace 'path_to_logo.png' with your image path)
+        # Developer logo linking to GitHub
         self.dev_logo = ClickableIcon("https://github.com/Quantum-Yeti/ScratchPad")
         self.dev_logo.setToolTip("GitHub Repository")
-        pixmap = QPixmap("icons/dev_logo.png")
+        logo_path = resource_path("icons/dev_logo.png")
+        pixmap = QPixmap(logo_path)
         if not pixmap.isNull():
             self.dev_logo.setPixmap(pixmap.scaledToWidth(100, Qt.SmoothTransformation))
         self.dev_logo.setAlignment(Qt.AlignCenter)
@@ -90,17 +91,15 @@ class Sidebar(QWidget):
         layout.addWidget(bottom_container)
 
     def run_bat_file(self):
-        file_path = QFileDialog.getOpenFileName(self, "Select .bat file", os.path.expanduser("~"),"*.bat")
+        file_path, _ = QFileDialog.getOpenFileName(self, "Select .bat file", os.path.expanduser("~"), "*.bat")
         if file_path:
             try:
                 subprocess.Popen(file_path, shell=True)
             except Exception as e:
-                QMessageBox.warning(self, "Error", f"Failed to run the .bat file: \n{e}")
-
+                QMessageBox.warning(self, "Error", f"Failed to run the .bat file:\n{e}")
 
     def _update_category_button_states(self):
         sender = self.sender()
         for btn in self.category_buttons:
             if btn is not sender:
                 btn.setChecked(False)
-

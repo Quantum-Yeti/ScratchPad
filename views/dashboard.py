@@ -3,6 +3,8 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QPixmap
 from views.pong import PongGame
 from views.sticky_note import StickyNoteWindow
+from utils.resource_path_utils import resource_path
+
 
 class DashboardView(QWidget):
     def __init__(self, model):
@@ -15,7 +17,7 @@ class DashboardView(QWidget):
         layout.setSpacing(20)
 
         title_img = QLabel()
-        pixmap = QPixmap("icons/dashboard_img.png")
+        pixmap = QPixmap(resource_path("icons/dashboard_img.png"))
         pixmap = pixmap.scaledToWidth(200, Qt.SmoothTransformation)
         title_img.setPixmap(pixmap)
         title_img.setAlignment(Qt.AlignCenter)
