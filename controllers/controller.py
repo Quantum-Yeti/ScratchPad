@@ -24,17 +24,22 @@ class NoteController:
         # Keep pixmaps alive for embedded images if needed somewhere else
         self.view._image_refs = []
 
+        # Connect signals and ensure add_note is connected only once
         self._connect_signals()
         self._setup_always_on_top_checkbox()
 
     def _connect_signals(self):
+        # Connect all signals and ensure add_note is connected only once
         self.view.controller = self
         self.sidebar.category_selected.connect(self.select_category)
 
         if hasattr(self.sidebar, 'dashboard_btn'):
             self.sidebar.dashboard_btn.clicked.connect(self.show_dashboard)
 
+        # Disconnect any previous connection to ensure it's connected only once
+        self.view.add_btn.clicked.disconnect()
         self.view.add_btn.clicked.connect(self.add_note)
+
         self.view.edit_btn.clicked.connect(self.edit_note)
         self.view.delete_btn.clicked.connect(self.delete_note)
         self.view.note_list.itemSelectionChanged.connect(self.on_note_select)  # fixed signal for QTreeWidget
@@ -91,7 +96,7 @@ class NoteController:
         notes = self.model.get_notes("Notes") or []
         contacts = self.model.get_notes("Contacts") or []
         bookmarks = self.model.get_notes("Bookmarks") or []
-        copilot = self.model.get_notes("Copilot") or []
+        copilot = self.model.get_notes("CoPilot") or []
 
         completed_tasks = self.model.count_completed_tasks() if hasattr(self.model, 'count_completed_tasks') else 0
         storage_percent = self.model.get_storage_usage_percent() if hasattr(self.model, 'get_storage_usage_percent') else 0
@@ -117,7 +122,6 @@ class NoteController:
         if note_id is not None and self.current_category:
             note = self.model.get_note_by_id(self.current_category, note_id)
             if note:
-                # Update cached note info in view, but do not try to display it here
                 self.view.current_note_id = note_id
                 self.view.current_note_content = note["content"]
             else:
@@ -128,6 +132,7 @@ class NoteController:
             self.view.current_note_content = ""
 
     def add_note(self):
+        print("add_note called")  # Log when add_note is triggered
         if not self.current_category:
             QMessageBox.warning(self.main_window, "Warning", "Please select a category first.")
             return
@@ -163,9 +168,27 @@ class NoteController:
         dialog.exec()
 
     def _add_note_callback(self, content):
-        title = content.split('\n')[0][:30] or "Untitled"
+        print("Add Note Callback Triggered")  # Log when callback is triggered
+        if not content.strip():
+            QMessageBox.warning(self.main_window, "Warning", "Note content cannot be empty.")
+            return
+
+        # Ensure the title is set correctly
+        if self.current_category == "CoPilot":
+            # Special handling for CoPilot category - avoid default title
+            title = content.split('\n')[0][:30] or "CoPilot Note"
+        else:
+            # Regular title generation for other categories
+            title = content.split('\n')[0][:30] or "Untitled Note"
+
+        # Add the note to the model
         self.model.add_note(self.current_category, title, content)
-        self.select_category(self.current_category)
+
+        # Manually update the note list without re-fetching all notes
+        notes = self.model.get_notes(self.current_category)
+        self.view.populate_note_list(notes)  # Directly update the view with new notes
+
+        # Optionally, update the dashboard if needed
         if self.dashboard_view and self.current_category is None:
             self.update_dashboard_stats()
 

@@ -21,11 +21,11 @@ class Sidebar(QWidget):
         icon_paths = {
             "Contacts": resource_path("icons/contacts.png"),
             "Bookmarks": resource_path("icons/bookmarks.png"),
-            "Copilot": resource_path("icons/copilot.png"),
+            "CoPilot": resource_path("icons/copilot.png"),
             "Notes": resource_path("icons/notes.png")
         }
 
-        categories = ["Contacts", "Bookmarks", "Copilot", "Notes"]
+        categories = ["Contacts", "Bookmarks", "CoPilot", "Notes"]
         self.category_buttons = []
 
         for category in categories:

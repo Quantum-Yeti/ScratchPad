@@ -50,7 +50,7 @@ class NoteModel:
                 "INSERT INTO notes (id, category, title, content) VALUES (?, ?, ?, ?)",
                 (note_id, category, title, content)
             )
-        return note_id  # returning the new id can be handy
+        return note_id
 
     def edit_note(self, category, note_id, title, content):
         with self.conn:
@@ -85,16 +85,16 @@ class NoteModel:
             result = cursor.fetchone()[0]
             return result if result is not None else 0
 
-    def get_max_storage(self):
-        return 1_000_000  # example max storage bytes
+    #def get_max_storage(self):
+        #return 1_000_000
 
-    def get_storage_usage_percent(self):
+    #def get_storage_usage_percent(self):
         used = self.get_used_storage()
         max_storage = self.get_max_storage()
         percent = int((used / max_storage) * 100) if max_storage else 0
         return min(percent, 100)  # cap at 100%
 
-    # Sticky notes methods fixed to use SQLite:
+    # Sticky notes methods
 
     def add_sticky_note(self):
         sticky_category = "sticky"

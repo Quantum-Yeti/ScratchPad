@@ -38,7 +38,7 @@ class DashboardView(QWidget):
         stats_layout.addWidget(self.bookmarks_stat)
 
         # Copilot
-        self.copilot_stat = self._create_stat_widget("Copilot", "0")
+        self.copilot_stat = self._create_stat_widget("CoPilot", "0")
         stats_layout.addWidget(self.copilot_stat)
 
         # Notes
