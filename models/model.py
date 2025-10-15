@@ -18,7 +18,6 @@ class NoteModel:
                     content TEXT NOT NULL
                 )
             """)
-            # Optional tasks table example for completed tasks
             self.conn.execute("""
                 CREATE TABLE IF NOT EXISTS tasks (
                     id TEXT PRIMARY KEY,
@@ -51,6 +50,7 @@ class NoteModel:
                 "INSERT INTO notes (id, category, title, content) VALUES (?, ?, ?, ?)",
                 (note_id, category, title, content)
             )
+        return note_id  # returning the new id can be handy
 
     def edit_note(self, category, note_id, title, content):
         with self.conn:
@@ -66,7 +66,7 @@ class NoteModel:
                 (note_id, category)
             )
 
-    # New dashboard stats methods:
+    # Dashboard stats methods:
 
     def count_notes(self):
         with self.conn:
@@ -79,17 +79,45 @@ class NoteModel:
             return cursor.fetchone()[0]
 
     def get_used_storage(self):
-        # Example: calculate total length of content in all notes (as a proxy for storage)
+        # Proxy: sum of content lengths in all notes
         with self.conn:
             cursor = self.conn.execute("SELECT SUM(LENGTH(content)) FROM notes")
             result = cursor.fetchone()[0]
             return result if result is not None else 0
 
     def get_max_storage(self):
-        return 1_000_000
+        return 1_000_000  # example max storage bytes
 
     def get_storage_usage_percent(self):
         used = self.get_used_storage()
         max_storage = self.get_max_storage()
         percent = int((used / max_storage) * 100) if max_storage else 0
         return min(percent, 100)  # cap at 100%
+
+    # Sticky notes methods fixed to use SQLite:
+
+    def add_sticky_note(self):
+        sticky_category = "sticky"
+        new_id = str(uuid.uuid4())
+        with self.conn:
+            self.conn.execute(
+                "INSERT INTO notes (id, category, title, content) VALUES (?, ?, ?, ?)",
+                (new_id, sticky_category, "Sticky Note", "")
+            )
+        return new_id
+
+    def get_note_content(self, note_id):
+        with self.conn:
+            cursor = self.conn.execute(
+                "SELECT content FROM notes WHERE id = ?",
+                (note_id,)
+            )
+            row = cursor.fetchone()
+            return row[0] if row else ""
+
+    def save_note_content(self, note_id, content):
+        with self.conn:
+            self.conn.execute(
+                "UPDATE notes SET content = ? WHERE id = ?",
+                (content, note_id)
+            )

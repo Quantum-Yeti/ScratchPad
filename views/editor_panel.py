@@ -45,7 +45,7 @@ class EditorPanel(QDialog):
                 img_filename = line[len("[image:"):-1]
                 img_path = os.path.join("data", img_filename)
                 if os.path.exists(img_path):
-                    pixmap = QPixmap(img_path).scaled(400, 400, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+                    pixmap = QPixmap(img_path).scaled(50, 50, Qt.KeepAspectRatio, Qt.SmoothTransformation)
                     cursor.insertImage(pixmap.toImage())
                     cursor.insertBlock()
                     self._image_refs.append(pixmap)
@@ -63,7 +63,7 @@ class EditorPanel(QDialog):
             new_name = f"{uuid.uuid4()}{ext}"
             new_path = os.path.join(img_folder, new_name)
             shutil.copy(filepath, new_path)
-            pixmap = QPixmap(new_path).scaled(400, 400, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+            pixmap = QPixmap(new_path).scaled(50, 50, Qt.KeepAspectRatio, Qt.SmoothTransformation)
             cursor = self.text_edit.textCursor()
             cursor.insertImage(pixmap.toImage())
             cursor.insertText(f"\n[image:{new_name}]\n")

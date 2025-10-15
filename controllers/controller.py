@@ -21,12 +21,11 @@ class NoteController:
 
         self.current_category = None
 
-        # Keep pixmaps alive for embedded images
+        # Keep pixmaps alive for embedded images if needed somewhere else
         self.view._image_refs = []
 
         self._connect_signals()
         self._setup_always_on_top_checkbox()
-        # Removed dashboard timer setup
 
     def _connect_signals(self):
         self.view.controller = self
@@ -38,7 +37,7 @@ class NoteController:
         self.view.add_btn.clicked.connect(self.add_note)
         self.view.edit_btn.clicked.connect(self.edit_note)
         self.view.delete_btn.clicked.connect(self.delete_note)
-        self.view.note_list.selectionModel().selectionChanged.connect(self.on_note_select)
+        self.view.note_list.itemSelectionChanged.connect(self.on_note_select)  # fixed signal for QTreeWidget
 
     def _setup_always_on_top_checkbox(self):
         self.always_on_top_cb = QCheckBox("Always on Top")
@@ -61,11 +60,14 @@ class NoteController:
         self.current_category = category
         notes = self.model.get_notes(category)
         self.view.populate_note_list(notes)
-        self.view.display_note_content("")
         self.view.set_category_title(category)
         self.view.show_notes()
         if self.dashboard_view:
             self.dashboard_view.hide()
+
+        # Clear current note selection and content cache
+        self.view.current_note_id = None
+        self.view.current_note_content = ""
 
     def show_dashboard(self):
         if not self.dashboard_view:
@@ -76,7 +78,11 @@ class NoteController:
         self.view.show_dashboard()
         if self.dashboard_view:
             self.dashboard_view.show()
-            self.update_dashboard_stats()  # Update immediately when dashboard is shown
+            self.update_dashboard_stats()
+
+        # Clear current note selection and content cache
+        self.view.current_note_id = None
+        self.view.current_note_content = ""
 
     def update_dashboard_stats(self):
         if not self.dashboard_view:
@@ -106,14 +112,20 @@ class NoteController:
         item = selected_items[0]
         return item.data(0, Qt.ItemDataRole.UserRole)
 
-    def on_note_select(self, selected, deselected):
+    def on_note_select(self):
         note_id = self.get_selected_note_id()
         if note_id is not None and self.current_category:
             note = self.model.get_note_by_id(self.current_category, note_id)
             if note:
-                self.display_note_content(note["content"], category=self.current_category)
+                # Update cached note info in view, but do not try to display it here
+                self.view.current_note_id = note_id
+                self.view.current_note_content = note["content"]
+            else:
+                self.view.current_note_id = None
+                self.view.current_note_content = ""
         else:
-            self.display_note_content("", category=self.current_category)
+            self.view.current_note_id = None
+            self.view.current_note_content = ""
 
     def add_note(self):
         if not self.current_category:
@@ -142,7 +154,7 @@ class NoteController:
             self.model.delete_note(self.current_category, note_id)
             self.select_category(self.current_category)
             if self.dashboard_view and self.current_category is None:
-                self.update_dashboard_stats()  # Update if dashboard visible
+                self.update_dashboard_stats()
 
     # ---- Private Methods ----
 
@@ -163,33 +175,3 @@ class NoteController:
         self.select_category(self.current_category)
         if self.dashboard_view and self.current_category is None:
             self.update_dashboard_stats()
-
-    def display_note_content(self, content, category=None):
-        self.view.editor.setReadOnly(False)
-        self.view.editor.clear()
-
-        if category in ("Bookmarks", "Copilot"):
-            self._insert_content_with_media(content)
-        else:
-            self.view.editor.setPlainText(content)
-
-        self.view.editor.setReadOnly(True)
-
-    def _insert_content_with_media(self, content):
-        self.view._image_refs.clear()
-        cursor = self.view.editor.textCursor()
-        lines = content.splitlines()
-        for line in lines:
-            img_match = re.match(r"\[image:(.*?)]", line.strip())
-            if img_match:
-                img_filename = img_match.group(1)
-                path = img_filename if os.path.exists(img_filename) else os.path.join("data", img_filename)
-                if os.path.exists(path):
-                    pixmap = QPixmap(path).scaled(50, 50, Qt.KeepAspectRatio, Qt.SmoothTransformation)
-                    cursor.insertImage(pixmap.toImage())
-                    self.view._image_refs.append(pixmap)
-                    cursor.insertBlock()
-                else:
-                    cursor.insertText(f"[Image not found: {img_filename}]\n")
-            else:
-                cursor.insertText(line + "\n")

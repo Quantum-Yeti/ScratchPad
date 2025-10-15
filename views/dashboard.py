@@ -1,12 +1,14 @@
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QProgressBar, QSizePolicy, QPushButton
-from PySide6.QtGui import QFont
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QPixmap
 from views.pong import PongGame
+from views.sticky_note import StickyNoteWindow
 
 class DashboardView(QWidget):
-    def __init__(self):
+    def __init__(self, model):
         super().__init__()
+
+        self.model = model  # Store model reference
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(10, 10, 10, 10)
@@ -23,8 +25,7 @@ class DashboardView(QWidget):
         stats_layout = QHBoxLayout()
         layout.addLayout(stats_layout)
 
-        #Left
-        stats_layout.addStretch()
+        stats_layout.addStretch()  # Left spacer
 
         # Contacts
         self.contacts_stat = self._create_stat_widget("Contacts", "0")
@@ -42,15 +43,35 @@ class DashboardView(QWidget):
         self.notes_stat = self._create_stat_widget("Notes", "0")
         stats_layout.addWidget(self.notes_stat)
 
-        #Right
-        stats_layout.addStretch()
+        stats_layout.addStretch()  # Right spacer
 
-        #Pong button
+        # Bottom Buttons layout (Pong + Sticky Note side by side)
+        buttons_layout = QHBoxLayout()
+        buttons_layout.setSpacing(10)
+        buttons_layout.setAlignment(Qt.AlignCenter)
+
         self.pong_btn = QPushButton("Play Pong")
         self.pong_btn.setToolTip("Play Pong")
         self.pong_btn.setFixedHeight(40)
         self.pong_btn.clicked.connect(self.launch_pong_game)
-        layout.addWidget(self.pong_btn, alignment=Qt.AlignCenter)
+        buttons_layout.addWidget(self.pong_btn)
+
+        self.sticky_note_btn = QPushButton("New Sticky Note")
+        self.sticky_note_btn.setToolTip("Create a sticky note")
+        self.sticky_note_btn.setFixedHeight(40)
+        self.sticky_note_btn.clicked.connect(self.launch_new_sticky_note)
+        buttons_layout.addWidget(self.sticky_note_btn)
+
+        self.load_sticky_notes_btn = QPushButton("Load Sticky Notes")
+        self.load_sticky_notes_btn.setToolTip("Load all existing sticky notes")
+        self.load_sticky_notes_btn.setFixedHeight(40)
+        self.load_sticky_notes_btn.clicked.connect(self.load_sticky_notes)
+        buttons_layout.addWidget(self.load_sticky_notes_btn)
+
+        layout.addLayout(buttons_layout)
+
+        # Keep track of sticky notes windows
+        self._sticky_notes = []
 
     def _create_stat_widget(self, label_text, value_text):
         widget = QWidget()
@@ -85,3 +106,21 @@ class DashboardView(QWidget):
     def launch_pong_game(self):
         self.pong_window = PongGame()
         self.pong_window.show()
+
+    def launch_new_sticky_note(self):
+        note_id = self.model.add_sticky_note()
+        sticky = StickyNoteWindow(self.model, note_id)
+        sticky.show()
+        self._sticky_notes.append(sticky)
+
+    def load_sticky_notes(self):
+        from PySide6.QtWidgets import QMessageBox
+        notes = self.model.get_notes("sticky")
+        if not notes:
+            QMessageBox.information(self, "Sticky Notes", "No sticky notes found.")
+            return
+
+        for note in notes:
+            sticky = StickyNoteWindow(self.model, note["id"])
+            sticky.show()
+            self._sticky_notes.append(sticky)

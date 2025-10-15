@@ -1,6 +1,6 @@
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QPushButton, QLabel, QSizePolicy, QSpacerItem
-from PySide6.QtCore import Signal, Qt
-from PySide6.QtGui import QPixmap
+from PySide6.QtCore import Signal, Qt, QSize
+from PySide6.QtGui import QPixmap, QIcon
 from PySide6.QtWidgets import QFileDialog, QMessageBox
 import subprocess
 import os
@@ -17,13 +17,28 @@ class Sidebar(QWidget):
         layout.setSpacing(4)
         layout.setContentsMargins(2, 2, 2, 2)
 
+        icon_paths = {
+            "Contacts": "icons/contacts.png",
+            "Bookmarks": "icons/bookmarks.png",
+            "Copilot": "icons/copilot.png",
+            "Notes": "icons/notes.png"
+        }
+
         categories = ["Contacts", "Bookmarks", "Copilot", "Notes"]
         self.category_buttons = []
+
         for category in categories:
             btn = QPushButton(category)
             btn.setToolTip(f"{category}")
             btn.setCheckable(True)
             btn.setFixedHeight(50)
+
+            # Set icon if available
+            icon_path = icon_paths.get(category)
+            if icon_path:
+                btn.setIcon(QIcon(icon_path))
+                btn.setIconSize(QSize(24, 24))
+
             btn.clicked.connect(lambda checked, c=category: self.category_selected.emit(c))
             layout.addWidget(btn)
             self.category_buttons.append(btn)
@@ -50,17 +65,22 @@ class Sidebar(QWidget):
         self.dashboard_btn = QPushButton("Dashboard")
         self.dashboard_btn.setToolTip("Dashboard")
         self.dashboard_btn.setFixedHeight(40)
+        self.dashboard_btn.setIcon(QIcon("icons/dashboard.png"))
+        self.dashboard_btn.setIconSize(QSize(20, 20))
         bottom_layout.addWidget(self.dashboard_btn)
 
         # Run .bat file button
         self.run_bat_btn = QPushButton("Run .bat file")
-        self.run_bat_btn.setToolTip("Run .bat file")
+        self.run_bat_btn.setToolTip("Run a local .bat file")
         self.run_bat_btn.setFixedHeight(40)
-        bottom_layout.addWidget(self.run_bat_btn)
+        self.run_bat_btn.setIcon(QIcon("icons/run.png"))
+        self.run_bat_btn.setIconSize(QSize(20, 20))
         self.run_bat_btn.clicked.connect(self.run_bat_file)
+        bottom_layout.addWidget(self.run_bat_btn)
 
         # Developer logo (replace 'path_to_logo.png' with your image path)
-        self.dev_logo = ClickableIcon("https://github.com/your-username-or-repo")  # <-- replace with your URL
+        self.dev_logo = ClickableIcon("https://github.com/Quantum-Yeti/ScratchPad")
+        self.dev_logo.setToolTip("GitHub Repository")
         pixmap = QPixmap("icons/dev_logo.png")
         if not pixmap.isNull():
             self.dev_logo.setPixmap(pixmap.scaledToWidth(100, Qt.SmoothTransformation))
