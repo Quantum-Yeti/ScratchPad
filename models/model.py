@@ -121,3 +121,8 @@ class NoteModel:
                 "UPDATE notes SET content = ? WHERE id = ?",
                 (content, note_id)
             )
+
+    # Method for consistency with helpers
+    def update_note(self, category, note_id, title, content):
+        """Alias for edit_note to maintain compatibility with helper functions."""
+        return self.edit_note(category, note_id, title, content)

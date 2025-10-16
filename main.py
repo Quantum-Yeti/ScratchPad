@@ -1,3 +1,4 @@
+from PySide6.QtGui import QPalette, QColor
 from PySide6.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget
 from controllers.controller import NoteController
 from models.model import NoteModel
@@ -10,6 +11,11 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Scribble Notes")
+
+        # Window background palette
+        palette = self.palette()
+        palette.setColor(QPalette.Window, QColor(50, 50, 50))
+        self.setPalette(palette)
 
         # Central widget and layout
         self.central_widget = QWidget()
