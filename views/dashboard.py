@@ -1,9 +1,10 @@
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QSizePolicy
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QPixmap
+from PySide6.QtGui import QPixmap, QIcon
 from views.pong import PongGame
 from views.sticky_note import StickyNoteWindow
 from utils.resource_path_utils import resource_path
+from helpers.style_sidebar_button import style_toolbar_button
 
 
 class DashboardView(QWidget):
@@ -13,15 +14,17 @@ class DashboardView(QWidget):
         self.model = model  # Store model reference
 
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(10, 10, 10, 10)
-        layout.setSpacing(20)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(8)
 
         title_img = QLabel()
         pixmap = QPixmap(resource_path("icons/dashboard_img.png"))
         pixmap = pixmap.scaledToWidth(200, Qt.SmoothTransformation)
         title_img.setPixmap(pixmap)
         title_img.setAlignment(Qt.AlignCenter)
-        layout.addWidget(title_img)
+        title_img.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        title_img.setStyleSheet("margin: 0; padding: 0;")
+        layout.addWidget(title_img, alignment=Qt.AlignCenter)
 
         # Stat panels layout
         stats_layout = QHBoxLayout()
@@ -54,20 +57,25 @@ class DashboardView(QWidget):
 
         self.pong_btn = QPushButton("Play Pong")
         self.pong_btn.setToolTip("Play Pong")
+        self.pong_btn.setIcon(QIcon(resource_path("icons/game.png")))
         self.pong_btn.setFixedHeight(40)
         self.pong_btn.clicked.connect(self.launch_pong_game)
+        self.setStyleSheet(style_toolbar_button(self.pong_btn))
         buttons_layout.addWidget(self.pong_btn)
 
         self.sticky_note_btn = QPushButton("New Sticky Note")
         self.sticky_note_btn.setToolTip("Create a sticky note")
+        self.sticky_note_btn.setIcon(QIcon(resource_path("icons/stickynote.png")))
         self.sticky_note_btn.setFixedHeight(40)
         self.sticky_note_btn.clicked.connect(self.launch_new_sticky_note)
+        self.setStyleSheet(style_toolbar_button(self.sticky_note_btn))
         buttons_layout.addWidget(self.sticky_note_btn)
 
         self.load_sticky_notes_btn = QPushButton("Load Sticky Notes")
         self.load_sticky_notes_btn.setToolTip("Load all existing sticky notes")
         self.load_sticky_notes_btn.setFixedHeight(40)
         self.load_sticky_notes_btn.clicked.connect(self.load_sticky_notes)
+        self.setStyleSheet(style_toolbar_button(self.load_sticky_notes_btn))
         buttons_layout.addWidget(self.load_sticky_notes_btn)
 
         layout.addLayout(buttons_layout)

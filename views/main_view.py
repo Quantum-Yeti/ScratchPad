@@ -2,7 +2,7 @@ from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QTreeWidget, QTreeWidgetItem,
     QLabel, QAbstractItemView, QTextEdit, QSizePolicy
 )
-from PySide6.QtCore import Qt, QTimer
+from PySide6.QtCore import Qt, QTimer, QSize
 from PySide6.QtGui import QIcon
 
 from utils.resource_path_utils import resource_path
@@ -38,6 +38,8 @@ class MainView(QWidget):
         # Right content area
         right_container = QWidget()
         right_layout = QVBoxLayout(right_container)
+        right_layout.setContentsMargins(0, 0, 0, 0)
+        right_layout.setSpacing(4)
         main_layout.addWidget(right_container, stretch=1)
 
         # Category label
@@ -46,25 +48,33 @@ class MainView(QWidget):
         self.category_title.setStyleSheet("font-weight: bold; font-size: 16px;")
         right_layout.addWidget(self.category_title)
 
-        # Toolbar
+        # --- Toolbar Buttons ---
         self.add_btn = QPushButton("Add")
         self.add_btn.setIcon(QIcon(resource_path("icons/add.png")))
+        self.add_btn.setMaximumWidth(90)
 
         self.edit_btn = QPushButton("Edit")
         self.edit_btn.setIcon(QIcon(resource_path("icons/edit.png")))
+        self.edit_btn.setMaximumWidth(90)
 
         self.delete_btn = QPushButton("Delete")
         self.delete_btn.setIcon(QIcon(resource_path("icons/delete.png")))
+        self.delete_btn.setMaximumWidth(90)
 
         self.btn_layout = QHBoxLayout()
+        self.btn_layout.setSpacing(5)
+        self.btn_layout.setContentsMargins(0, 0, 0, 0)
         self.btn_layout.addWidget(self.add_btn)
         self.btn_layout.addWidget(self.edit_btn)
         self.btn_layout.addWidget(self.delete_btn)
+        self.btn_layout.addStretch()
         right_layout.addLayout(self.btn_layout)
 
-        # Bottom: notes + preview
+        # --- Notes & Preview ---
         bottom_container = QWidget()
         bottom_layout = QHBoxLayout(bottom_container)
+        bottom_layout.setContentsMargins(0, 0, 0, 0)
+        bottom_layout.setSpacing(5)
         right_layout.addWidget(bottom_container, stretch=1)
 
         # Note list
@@ -81,10 +91,22 @@ class MainView(QWidget):
         self.preview.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         bottom_layout.addWidget(self.preview, stretch=2)
 
-        # Dashboard view
+        # --- Dashboard (top-centered alignment) ---
         self.dashboard_view = DashboardView(model=self.note_model)
         self.dashboard_view.hide()
-        right_layout.addWidget(self.dashboard_view)
+        right_layout.addWidget(self.dashboard_view, alignment=Qt.AlignTop)
+
+        # Wrapper to keep it top and horizontally centered
+        dash_wrapper = QWidget()
+        dash_layout = QVBoxLayout(dash_wrapper)
+        dash_layout.setContentsMargins(0, 0, 0, 0)
+        dash_layout.setAlignment(Qt.AlignTop | Qt.AlignHCenter)
+
+        dash_layout.addWidget(self.dashboard_view, alignment=Qt.AlignHCenter)
+        dash_layout.addStretch()  # pushes dashboard to the top
+
+        right_layout.addWidget(dash_wrapper)
+
 
         # === Connections ===
         self.sidebar.category_selected.connect(self.load_notes_for_category)

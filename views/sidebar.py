@@ -1,10 +1,11 @@
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QPushButton, QLabel, QSizePolicy, QSpacerItem, QFileDialog, QMessageBox
 from PySide6.QtCore import Signal, Qt, QSize
 from PySide6.QtGui import QPixmap, QIcon
-import subprocess
 import os
 
 from helpers.clickable_icon import ClickableIcon
+from helpers.run_bat_file import run_bat_file
+from helpers.style_sidebar_button import style_toolbar_button
 from utils.resource_path_utils import resource_path
 
 
@@ -45,6 +46,7 @@ class Sidebar(QWidget):
 
         # Ensure only one button can be checked at a time
         for btn in self.category_buttons:
+            style_toolbar_button(btn)
             btn.clicked.connect(self._update_category_button_states)
 
         if self.category_buttons:
@@ -67,6 +69,7 @@ class Sidebar(QWidget):
         self.dashboard_btn.setFixedHeight(40)
         self.dashboard_btn.setIcon(QIcon(resource_path("icons/dashboard.png")))
         self.dashboard_btn.setIconSize(QSize(20, 20))
+        style_toolbar_button(self.dashboard_btn)
         bottom_layout.addWidget(self.dashboard_btn)
 
         # Run .bat file button
@@ -76,6 +79,7 @@ class Sidebar(QWidget):
         self.run_bat_btn.setIcon(QIcon(resource_path("icons/run.png")))
         self.run_bat_btn.setIconSize(QSize(20, 20))
         self.run_bat_btn.clicked.connect(self.run_bat_file)
+        style_toolbar_button(self.run_bat_btn)
         bottom_layout.addWidget(self.run_bat_btn)
 
         # Developer logo linking to GitHub
@@ -91,12 +95,7 @@ class Sidebar(QWidget):
         layout.addWidget(bottom_container)
 
     def run_bat_file(self):
-        file_path, _ = QFileDialog.getOpenFileName(self, "Select .bat file", os.path.expanduser("~"), "*.bat")
-        if file_path:
-            try:
-                subprocess.Popen(file_path, shell=True)
-            except Exception as e:
-                QMessageBox.warning(self, "Error", f"Failed to run the .bat file:\n{e}")
+        run_bat_file(self.run_bat_btn)
 
     def _update_category_button_states(self):
         sender = self.sender()

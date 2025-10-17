@@ -14,7 +14,7 @@ class MainWindow(QMainWindow):
 
         # Window background palette
         palette = self.palette()
-        palette.setColor(QPalette.Window, QColor(50, 50, 50))
+        palette.setColor(QPalette.Window, QColor(60, 60, 60))
         self.setPalette(palette)
 
         # Central widget and layout

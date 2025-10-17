@@ -41,7 +41,7 @@ def open_note_editor(main_view, item, category):
         # 🟩 Mark editor open
         main_view._editor_open = True
 
-        # 🪟 Create the original EditorPanel dialog
+        # Create the original EditorPanel dialog
         editor = EditorPanel(
             parent=main_view,
             title=f"Edit Note: {note['title']}",
