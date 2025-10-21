@@ -67,7 +67,6 @@ class NoteModel:
             )
 
     # Dashboard stats methods:
-
     def count_notes(self):
         with self.conn:
             cursor = self.conn.execute("SELECT COUNT(*) FROM notes")
@@ -95,7 +94,6 @@ class NoteModel:
         return min(percent, 100)  # cap at 100%
 
     # Sticky notes methods
-
     def add_sticky_note(self):
         sticky_category = "sticky"
         new_id = str(uuid.uuid4())
@@ -105,6 +103,14 @@ class NoteModel:
                 (new_id, sticky_category, "Sticky Note", "")
             )
         return new_id
+
+    def delete_sticky_note(self, note_id):
+        """Delete a sticky note by its ID."""
+        with self.conn:
+            self.conn.execute(
+                "DELETE FROM notes WHERE id = ? AND category = ?",
+                (note_id, "sticky")
+            )
 
     def get_note_content(self, note_id):
         with self.conn:

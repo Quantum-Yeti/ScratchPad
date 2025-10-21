@@ -51,10 +51,8 @@ class EditorPanel(QDialog):
         cancel_btn.clicked.connect(self.reject)
         btn_layout.addWidget(cancel_btn)
 
-    # ==================================================
-    # 🖼️ IMAGE HANDLING
-    # ==================================================
 
+    #IMAGE HANDLING
     def _render_content_with_images(self, content: str):
         """Renders text and [image:...] placeholders."""
         self.text_edit.clear()
@@ -101,10 +99,8 @@ class EditorPanel(QDialog):
 
         self._image_refs.append(pixmap)
 
-    # ==================================================
-    # 💾 SAVE HANDLING
-    # ==================================================
 
+    # SAVE HANDLING
     def save_note(self):
         """Handles Save button logic safely (prevents reopen)."""
         if self._is_saving:

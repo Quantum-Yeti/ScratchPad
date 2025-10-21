@@ -37,7 +37,7 @@ class MainWindow(QMainWindow):
             view=self.view,
             sidebar=self.view.sidebar,
             main_window=self,
-            dashboard_view=self.view.dashboard_view  # Use dashboard_view from MainView
+            dashboard_view=self.view.dashboard_container.dashboard_view  # Use dashboard_view from MainView
         )
 
         # View Switcher

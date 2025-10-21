@@ -1,5 +1,5 @@
 from PySide6.QtCore import Qt, QSignalBlocker
-from views.editor_panel import EditorPanel
+from views.components.editor_panel import EditorPanel
 
 
 def open_note_editor(main_view, item, category):

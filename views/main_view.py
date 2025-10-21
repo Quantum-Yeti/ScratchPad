@@ -1,20 +1,22 @@
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QTreeWidget, QTreeWidgetItem,
-    QLabel, QAbstractItemView, QTextEdit, QSizePolicy
+    QLabel, QAbstractItemView, QSizePolicy, QTextBrowser
 )
-from PySide6.QtCore import Qt, QTimer, QSize
-from PySide6.QtGui import QIcon
+from PySide6.QtCore import Qt, QTimer, QUrl
+from PySide6.QtGui import QIcon, QDesktopServices
 
 from utils.resource_path_utils import resource_path
 from views.dashboard import DashboardView
-from views.sidebar import Sidebar
+from views.components.sidebar import Sidebar
 from models.model import NoteModel
 from helpers.editor_helper import open_note_editor
+from views.components.dashboard_container import DashboardContainer
+import re
 
 
 class MainView(QWidget):
     """
-    The main application view for Scribble Notes.
+    Main application view for Scribble Notes.
     Provides sidebar, note list, preview, and top toolbar buttons.
     """
 
@@ -75,38 +77,27 @@ class MainView(QWidget):
         bottom_layout = QHBoxLayout(bottom_container)
         bottom_layout.setContentsMargins(0, 0, 0, 0)
         bottom_layout.setSpacing(5)
+
+        # Dashboard Container
+        self.dashboard_container = DashboardContainer(model=self.note_model)
+        right_layout.addWidget(self.dashboard_container, alignment=Qt.AlignTop)
         right_layout.addWidget(bottom_container, stretch=1)
 
         # Note list
         self.note_list = QTreeWidget()
         self.note_list.setColumnCount(1)
-        self.note_list.setHeaderLabels(["Title"])
+        self.note_list.setHeaderLabels([""])
         self.note_list.setSelectionMode(QAbstractItemView.SingleSelection)
         self.note_list.setMinimumWidth(200)
         bottom_layout.addWidget(self.note_list, stretch=1)
 
         # Preview pane
-        self.preview = QTextEdit()
+        self.preview = QTextBrowser()
         self.preview.setReadOnly(True)
+        self.preview.setOpenExternalLinks(False)  # Handle clicks manually
+        self.preview.anchorClicked.connect(self.open_link_externally)
         self.preview.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         bottom_layout.addWidget(self.preview, stretch=2)
-
-        # --- Dashboard (top-centered alignment) ---
-        self.dashboard_view = DashboardView(model=self.note_model)
-        self.dashboard_view.hide()
-        right_layout.addWidget(self.dashboard_view, alignment=Qt.AlignTop)
-
-        # Wrapper to keep it top and horizontally centered
-        dash_wrapper = QWidget()
-        dash_layout = QVBoxLayout(dash_wrapper)
-        dash_layout.setContentsMargins(0, 0, 0, 0)
-        dash_layout.setAlignment(Qt.AlignTop | Qt.AlignHCenter)
-
-        dash_layout.addWidget(self.dashboard_view, alignment=Qt.AlignHCenter)
-        dash_layout.addStretch()  # pushes dashboard to the top
-
-        right_layout.addWidget(dash_wrapper)
-
 
         # === Connections ===
         self.sidebar.category_selected.connect(self.load_notes_for_category)
@@ -116,10 +107,8 @@ class MainView(QWidget):
         self.edit_btn.clicked.connect(self.handle_edit_click)
         self.delete_btn.clicked.connect(self.delete_selected_note)
 
-    # Internal helpers
-
+    # ---------------- Internal Helpers ----------------
     def populate_note_list(self, notes):
-        """Fills the note list widget."""
         self.note_list.blockSignals(True)
         self.note_list.clear()
         for note in notes:
@@ -129,23 +118,40 @@ class MainView(QWidget):
         self.note_list.blockSignals(False)
 
     def on_note_selected(self):
-        """Updates the preview when a note is selected."""
+        """Updates the preview when a note is selected and makes URLs clickable."""
         selected_items = self.note_list.selectedItems()
-        if selected_items:
-            item = selected_items[0]
-            note_id = item.data(0, Qt.ItemDataRole.UserRole)
-            note = self.note_model.get_note_by_id(self.current_category, note_id)
-            if note:
-                self.current_note_id = note_id
-                self.current_note_content = note["content"]
-                self.preview.setPlainText(self.current_note_content)
-                return
-        self.preview.clear()
+        if not selected_items or not self.current_category:
+            self.preview.clear()
+            return
 
-    # Event Handlers (Double-click + Edit)
+        item = selected_items[0]
+        note_id = item.data(0, Qt.ItemDataRole.UserRole)
+        note = self.note_model.get_note_by_id(self.current_category, note_id)
+        if not note:
+            self.preview.clear()
+            return
+
+        self.current_note_id = note_id
+        self.current_note_content = note["content"]
+
+        # Convert URLs to clickable links
+        def linkify(text):
+            url_pattern = r"(https?://[^\s]+)"
+            return re.sub(
+                url_pattern,
+                r'<a href="\1" style="color:#2E86C1;text-decoration:none;">\1</a>',
+                text
+            )
+
+        html_content = linkify(self.current_note_content).replace("\n", "<br>")
+        self.preview.setHtml(html_content)
+
+    def open_link_externally(self, url: QUrl):
+        """Open clicked URL in default system browser."""
+        QDesktopServices.openUrl(url)
+
+    # ---------------- Event Handlers ----------------
     def handle_double_click(self, item, column):
-        print("DOUBLE CLICK handler invoked:", item, column, "cat:", self.current_category, "_editor_open:", getattr(self, "_editor_open", False))
-
         if not item or not self.current_category:
             return
         QTimer.singleShot(0, lambda: open_note_editor(self, item, self.current_category))
@@ -156,7 +162,6 @@ class MainView(QWidget):
             return
         item = selected_items[0]
 
-        # same deferred logic as double-click
         def _open():
             if getattr(self, "_editor_open", False):
                 return
@@ -168,8 +173,7 @@ class MainView(QWidget):
 
         QTimer.singleShot(0, _open)
 
-
-    # Public methods
+    # ---------------- Public Methods ----------------
     def set_category_title(self, title: str):
         self.category_title.setText(title)
 
@@ -184,14 +188,25 @@ class MainView(QWidget):
         self.show_notes()
 
     def show_dashboard(self):
+        """Switches to dashboard view."""
+        self.category_title.hide()
+        self.add_btn.hide()
+        self.edit_btn.hide()
+        self.delete_btn.hide()
         self.note_list.hide()
         self.preview.hide()
-        self.dashboard_view.show()
+        self.dashboard_container.show_dashboard()
 
     def show_notes(self):
-        self.dashboard_view.hide()
+        """Switches back to notes view."""
+        self.sidebar.show()
+        self.category_title.show()
+        self.add_btn.show()
+        self.edit_btn.show()
+        self.delete_btn.show()
         self.note_list.show()
         self.preview.show()
+        self.dashboard_container.hide_dashboard()
 
     def add_new_note(self):
         if not self.current_category:

@@ -1,9 +1,8 @@
-import re
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QCheckBox, QMessageBox
 
 from helpers.tooltip import ToolTip
-from views.editor_panel import EditorPanel
+from views.components.editor_panel import EditorPanel
 from helpers.reselect_note import _reselect_note_in_list
 
 
